@@ -1,25 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>Hexo</title>
+  <title>生活随笔</title>
   
   
   <link href="/atom.xml" rel="self"/>
   
-  <link href="https://knight.github.io/"/>
-  <updated>2020-04-20T13:38:53.467Z</updated>
-  <id>https://knight.github.io/</id>
+  <link href="https://hkj141421.github.io/"/>
+  <updated>2020-04-21T12:46:07.821Z</updated>
+  <id>https://hkj141421.github.io/</id>
   
   <author>
-    <name>John Doe</name>
+    <name>knight</name>
     
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>hexo第一篇文章</title>
+    <link href="https://hkj141421.github.io/2020/04/21/hexo%E7%AC%AC%E4%B8%80%E7%AF%87%E6%96%87%E7%AB%A0/"/>
+    <id>https://hkj141421.github.io/2020/04/21/hexo%E7%AC%AC%E4%B8%80%E7%AF%87%E6%96%87%E7%AB%A0/</id>
+    <published>2020-04-21T12:43:57.000Z</published>
+    <updated>2020-04-21T12:46:07.821Z</updated>
+    
+    <summary type="html">
+    
+    </summary>
+    
+    
+    
+      <category term="test" scheme="https://hkj141421.github.io/tags/test/"/>
+    
+  </entry>
+  
+  <entry>
     <title>Hello World</title>
-    <link href="https://knight.github.io/2020/04/20/hello-world/"/>
-    <id>https://knight.github.io/2020/04/20/hello-world/</id>
+    <link href="https://hkj141421.github.io/2020/04/20/hello-world/"/>
+    <id>https://hkj141421.github.io/2020/04/20/hello-world/</id>
     <published>2020-04-20T13:38:53.465Z</published>
     <updated>2020-04-20T13:38:53.467Z</updated>
     

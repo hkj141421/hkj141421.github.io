@@ -1,0 +1,546 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>深入理解JAVA虚拟机的高级特性与最佳实践--笔记 | 生活随笔</title><meta name="description" content="深入理解JAVA虚拟机的高级特性与最佳实践--笔记"><meta name="keywords" content="JVM"><meta name="author" content="knight"><meta name="copyright" content="knight"><meta name="format-detection" content="telephone=no"><link rel="shortcut icon" href="/img/favicon.ico"><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="crossorigin"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><meta name="twitter:card" content="summary"><meta name="twitter:title" content="深入理解JAVA虚拟机的高级特性与最佳实践--笔记"><meta name="twitter:description" content="深入理解JAVA虚拟机的高级特性与最佳实践--笔记"><meta name="twitter:image" content="https://hkj141421.github.io/img/post01.jpg"><meta property="og:type" content="article"><meta property="og:title" content="深入理解JAVA虚拟机的高级特性与最佳实践--笔记"><meta property="og:url" content="https://hkj141421.github.io/2021/10/20/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3JAVA%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7%E4%B8%8E%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5--%E7%AC%94%E8%AE%B0/"><meta property="og:site_name" content="生活随笔"><meta property="og:description" content="深入理解JAVA虚拟机的高级特性与最佳实践--笔记"><meta property="og:image" content="https://hkj141421.github.io/img/post01.jpg"><script src="https://cdn.jsdelivr.net/npm/js-cookie/dist/js.cookie.min.js"></script><script>var autoChangeMode = '1'
+var t = Cookies.get("theme")
+if (autoChangeMode == '1'){
+  var isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches
+  var isLightMode = window.matchMedia("(prefers-color-scheme: light)").matches
+  var isNotSpecified = window.matchMedia("(prefers-color-scheme: no-preference)").matches
+  var hasNoSupport = !isDarkMode && !isLightMode && !isNotSpecified
+
+  if (t === undefined){
+    if (isLightMode) activateLightMode()
+    else if (isDarkMode) activateDarkMode()
+    else if (isNotSpecified || hasNoSupport){
+      console.log('You specified no preference for a color scheme or your browser does not support it. I Schedule dark mode during night time.')
+      var now = new Date()
+      var hour = now.getHours()
+      var isNight = hour < 6 || hour >= 18
+      isNight ? activateDarkMode() : activateLightMode()
+  }
+  } else if (t == 'light') activateLightMode()
+  else activateDarkMode()
+
+} else if (autoChangeMode == '2'){
+  now = new Date();
+  hour = now.getHours();
+  isNight = hour < 6 || hour >= 18
+  if(t === undefined) isNight? activateDarkMode() : activateLightMode()
+  else if (t === 'light') activateLightMode()
+  else activateDarkMode() 
+} else {
+  if ( t == 'dark' ) activateDarkMode()
+  else if ( t == 'light') activateLightMode()
+}
+
+function activateDarkMode(){
+  document.documentElement.setAttribute('data-theme', 'dark')
+  if (document.querySelector('meta[name="theme-color"]') !== null){
+    document.querySelector('meta[name="theme-color"]').setAttribute('content','#000')
+  }
+}
+function activateLightMode(){
+  document.documentElement.setAttribute('data-theme', 'light')
+  if (document.querySelector('meta[name="theme-color"]') !== null){
+  document.querySelector('meta[name="theme-color"]').setAttribute('content','#fff')
+  }
+}</script><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css"><link rel="canonical" href="https://hkj141421.github.io/2021/10/20/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3JAVA%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7%E4%B8%8E%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5--%E7%AC%94%E8%AE%B0/"><link rel="next" title="springboot1.x部署weblogic10的过程" href="https://hkj141421.github.io/2021/08/12/springboot1-x%E9%83%A8%E7%BD%B2weblogic10%E7%9A%84%E8%BF%87%E7%A8%8B/"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: {"defaultEncoding":2,"translateDelay":0,"cookieDomain":"https://hkj141421.github.io","msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  bookmark: {
+    message_prev: '按',
+    message_next: '键将本页加入书签'
+  },
+  runtime_unit: '天',
+  runtime: true,
+  copyright: undefined,
+  ClickShowText: undefined,
+  medium_zoom: false,
+  fancybox: true,
+  Snackbar: undefined,
+  baiduPush: false,
+  highlightCopy: true,
+  highlightLang: true,
+  highlightShrink: 'false',
+  isFontAwesomeV5: false,
+  isPhotoFigcaption: false
+  
+}</script><script>var GLOBAL_CONFIG_SITE = { 
+  isPost: true,
+  isHome: false,
+  isSidebar: true  
+  }</script><noscript><style>
+#page-header {
+  opacity: 1
+}
+.justified-gallery img{
+  opacity: 1
+}
+</style></noscript><meta name="generator" content="Hexo 4.2.0"><link rel="alternate" href="/atom.xml" title="生活随笔" type="application/atom+xml">
+</head><body><div id="mobile-sidebar"><div id="menu_mask"></div><div id="mobile-sidebar-menus"><div class="mobile_author_icon"><img class="avatar-img" src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="mobile_post_data"><div class="mobile_data_item is-center"><div class="mobile_data_link"><a href="/archives/"><div class="headline">文章</div><div class="length_num">22</div></a></div></div><div class="mobile_data_item is-center">      <div class="mobile_data_link"><a href="/tags/"><div class="headline">标签</div><div class="length_num">21</div></a></div></div><div class="mobile_data_item is-center">     <div class="mobile_data_link"><a href="/categories/"><div class="headline">分类</div><div class="length_num">3</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fa fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fa fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fa fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fa fa-heart"></i><span> 关于</span></a></div></div></div></div><i class="fa fa-arrow-right on" id="toggle-sidebar" aria-hidden="true">     </i><div id="sidebar"><div class="sidebar-toc"><div class="sidebar-toc__title">目录</div><div class="sidebar-toc__progress"><span class="progress-notice">你已经读了</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar">     </div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-5"><a class="toc-link" href="#一、内存自动管理机制："><span class="toc-number">1.</span> <span class="toc-text">一、内存自动管理机制：</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#JVM内存分区："><span class="toc-number">1.1.</span> <span class="toc-text">JVM内存分区：</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#此外还有一部分内存被称为直接内存-这部分空间实际上并不属于jvm管理的内存区域，在jdk1-4之后sun推出了nio，nio基于channel进行读写，它可以通过调用本地方法来直接分配堆外内存，然后通过对象引用内存地址进行操作，可以避免读写时还需要从堆外内存复制到堆内内存，节省了io操作，显著提高性能"><span class="toc-number">1.2.</span> <span class="toc-text">此外还有一部分内存被称为直接内存,这部分空间实际上并不属于jvm管理的内存区域，在jdk1.4之后sun推出了nio，nio基于channel进行读写，它可以通过调用本地方法来直接分配堆外内存，然后通过对象引用内存地址进行操作，可以避免读写时还需要从堆外内存复制到堆内内存，节省了io操作，显著提高性能 |</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#对象访问的方式"><span class="toc-number">2.</span> <span class="toc-text">对象访问的方式:</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#可回收对象判定算法："><span class="toc-number">2.1.</span> <span class="toc-text">可回收对象判定算法：</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#引用类型："><span class="toc-number">2.2.</span> <span class="toc-text">引用类型：</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#方法区回收"><span class="toc-number">2.3.</span> <span class="toc-text">方法区回收</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#回收算法"><span class="toc-number">2.4.</span> <span class="toc-text">回收算法</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#垃圾收集器"><span class="toc-number">2.5.</span> <span class="toc-text">垃圾收集器</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#内存区域管理"><span class="toc-number">2.6.</span> <span class="toc-text">内存区域管理</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#JDK命令行工具"><span class="toc-number">2.7.</span> <span class="toc-text">JDK命令行工具</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#二、虚拟机执行子系统"><span class="toc-number">3.</span> <span class="toc-text">二、虚拟机执行子系统</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#类文件结构"><span class="toc-number">3.1.</span> <span class="toc-text">类文件结构</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#虚拟机类加载机制"><span class="toc-number">3.2.</span> <span class="toc-text">虚拟机类加载机制</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#虚拟机字节码执行引擎"><span class="toc-number">3.3.</span> <span class="toc-text">虚拟机字节码执行引擎</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#程序编译及优化"><span class="toc-number">3.4.</span> <span class="toc-text">程序编译及优化</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#JAVA内存模型与线程"><span class="toc-number">3.5.</span> <span class="toc-text">JAVA内存模型与线程</span></a></li></ol></li></ol></div></div></div><div id="body-wrap"><div class="post-bg" id="nav" style="background-image: url(/img/post01.jpg)"><div id="page-header"><span class="pull_left" id="blog_name"><a class="blog_title" id="site-name" href="/">生活随笔</a></span><span class="pull_right menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fa fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fa fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fa fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fa fa-heart"></i><span> 关于</span></a></div></div><span class="toggle-menu close"><a class="site-page"><i class="fa fa-bars fa-fw" aria-hidden="true"></i></a></span></span></div><div id="post-info"><div id="post-title"><div class="posttitle">深入理解JAVA虚拟机的高级特性与最佳实践--笔记</div></div><div id="post-meta"><div class="meta-firstline"><time class="post-meta__date"><span class="post-meta__date-created" title="发表于 2021-10-20 14:33:57"><i class="fa fa-calendar" aria-hidden="true"></i> 发表于 2021-10-20</span><span class="post-meta__separator">|</span><span class="post-meta__date-updated" title="更新于 2021-10-22 12:08:09"><i class="fa fa-history" aria-hidden="true"></i> 更新于 2021-10-22</span></time></div><div class="meta-secondline"> </div><div class="meta-thirdline"><span class="post-meta-pv-cv"><i class="fa fa-eye post-meta__icon" aria-hidden="true"> </i><span>阅读量:</span><span id="busuanzi_value_page_pv"></span></span><span class="post-meta-commentcount"></span></div></div></div></div><main class="layout_post" id="content-inner"><article id="post"><div id="article-container"><h5 id="一、内存自动管理机制："><a href="#一、内存自动管理机制：" class="headerlink" title="一、内存自动管理机制："></a>一、内存自动管理机制：</h5><h6 id="JVM内存分区："><a href="#JVM内存分区：" class="headerlink" title="JVM内存分区："></a>JVM内存分区：</h6><table>
+<thead>
+<tr>
+<th>区域名</th>
+<th>是否共享</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>程序计数器</td>
+<td>线程私有</td>
+<td>用于存储线程当前执行的程序行号，jvm通过改变行号来选取下一条需要执行的命令</td>
+</tr>
+<tr>
+<td>虚拟机栈</td>
+<td>线程私有</td>
+<td>用于存储方法局部变量表、操作栈帧、动态链接、方法出口等信息，每一个方法被执行的时候都会创建，栈帧的内存空间分配在编译时就完成了</td>
+</tr>
+<tr>
+<td>本地方法栈</td>
+<td>线程私有</td>
+<td>作用与虚拟机栈相似，只是本地方法栈是为jvm调用native方法服务的</td>
+</tr>
+<tr>
+<td>java堆</td>
+<td>线程共享</td>
+<td>用于存放对象实例，也是GC的主要收集区域</td>
+</tr>
+<tr>
+<td>方法区</td>
+<td>线程共享</td>
+<td>用于存放类信息、静态变量等信息，还包含了运行时常量池</td>
+</tr>
+</tbody></table>
+<h6 id="此外还有一部分内存被称为直接内存-这部分空间实际上并不属于jvm管理的内存区域，在jdk1-4之后sun推出了nio，nio基于channel进行读写，它可以通过调用本地方法来直接分配堆外内存，然后通过对象引用内存地址进行操作，可以避免读写时还需要从堆外内存复制到堆内内存，节省了io操作，显著提高性能"><a href="#此外还有一部分内存被称为直接内存-这部分空间实际上并不属于jvm管理的内存区域，在jdk1-4之后sun推出了nio，nio基于channel进行读写，它可以通过调用本地方法来直接分配堆外内存，然后通过对象引用内存地址进行操作，可以避免读写时还需要从堆外内存复制到堆内内存，节省了io操作，显著提高性能" class="headerlink" title="此外还有一部分内存被称为直接内存,这部分空间实际上并不属于jvm管理的内存区域，在jdk1.4之后sun推出了nio，nio基于channel进行读写，它可以通过调用本地方法来直接分配堆外内存，然后通过对象引用内存地址进行操作，可以避免读写时还需要从堆外内存复制到堆内内存，节省了io操作，显著提高性能 |"></a>此外还有一部分内存被称为直接内存,这部分空间实际上并不属于jvm管理的内存区域，在jdk1.4之后sun推出了nio，nio基于channel进行读写，它可以通过调用本地方法来直接分配堆外内存，然后通过对象引用内存地址进行操作，可以避免读写时还需要从堆外内存复制到堆内内存，节省了io操作，显著提高性能 |</h6><h5 id="对象访问的方式"><a href="#对象访问的方式" class="headerlink" title="对象访问的方式:"></a>对象访问的方式:</h5><ol>
+<li><p>句柄访问：采用句柄访问方式时，jvm需要创建一个句柄池，对象引用的是句柄，句柄内存储了对象实例地址和对象类型信息地址，采用这种方式的好处是对象移动时只需要修改句柄的实例地址即可，对象引用则不需要改变。</p>
+</li>
+<li><p>直接指针访问：采用直接指针访问方式时，jvm需要创建一个存放对象类型信息的区域，对象引用中直接包含了实例数据和对象类型信息的地址，直接指针访问的好处是节省了一次指针定位的操作，不需要再根据对象引用中的实例地址查找数据，hotspot就是采用这种方式，它将类型信息存放在方法区。</p>
+</li>
+</ol>
+<h6 id="可回收对象判定算法："><a href="#可回收对象判定算法：" class="headerlink" title="可回收对象判定算法："></a>可回收对象判定算法：</h6><ol>
+<li><p>引用计数法：统计每一个对象的引用次数，每当对象实例被引用时+1，放弃时-1，当计数为0时，则代表该实例可回收，这种算法简单而且高效，但是无法处理对象循环引用的问题</p>
+</li>
+<li><p>根搜索算法：通过一系列GC root的对象做为起点，向下搜索，所走过的路径成为引用链，当一个对象到任意GC root都没有引用时，则该对象可回收。在java中局部变量表中引用的对象、静态变量、常量引用的对象、本地方法引用的对象都可以作为GC root。<br>当对象被标记为可回收后，并不意味着直接就被清除了，jvm会对其进行两次标记，第一次发现对象没有引用链时会对其进行标记并判断其是否覆盖了finalize方法或是否已被jvm调用了finalize方法，如果覆盖了finalize方法且未被自动调用过则将其放入一个队列中等待调用finalize方法，但jvm不保证会等待方法运行完成，防止某个对象的finalize执行缓慢导致程序回收系统崩溃，第二次标记时如果发现对象重新建立引用链则将其移出回收序列</p>
+</li>
+</ol>
+<h6 id="引用类型："><a href="#引用类型：" class="headerlink" title="引用类型："></a>引用类型：</h6><ol>
+<li><p>强引用：该引用是最常见的引用方式，我们平常通过new赋值对象的方式就是一种强引用，这种方式引用的对象，除非我们主动释放引用，否则它会一直存在</p>
+</li>
+<li><p>软引用：该引用可以通过SoftReference来实现，当jvm内存不足时，这种方式引用的对象会被回收</p>
+</li>
+<li><p>弱引用：该引用可以通过WeakReference来实现，这种方式引用的对象只能存活到下一次GC回收前</p>
+</li>
+<li><p>虚引用：该引用可以通过PhantomReference来实现，这种方式引用的对象不会对其生命周期造成任何影响，它的作用仅仅是在GC回收时给予一个系统通知</p>
+</li>
+</ol>
+<h6 id="方法区回收"><a href="#方法区回收" class="headerlink" title="方法区回收"></a>方法区回收</h6><p>方法区又称永久代，因存放类信息等几乎不会被回收的数据而得名。但实际上永久代也会进行回收，只是条件非常苛刻。永久代主要回收两种数据：一、废弃常量，二、无用的类。前者只有当程序中没有任意变量引用该常量且内存不足时才会回收，后者则必须程序中不存在该类的实例，也不存在该类的class实例，无法通过反射访问该类，连加载该类的classloader也不存在时才满足回收条件，而要真正回收还需要-Xnoclassgc参数进行控制</p>
+<h6 id="回收算法"><a href="#回收算法" class="headerlink" title="回收算法"></a>回收算法</h6><ol>
+<li><p>标记-清除算法：先标记出哪些对象可以回收，然后逐个回收空间，缺点：效率低且会产生大量不连续的内存空间，当需要分配大对象时无法找到足够的连续内存空间，会导致提前触发GC回收</p>
+</li>
+<li><p>标记-复制算法：首先将内存空间分为两部分，一部分用于对象实例分配，另一部分保留，先标记出哪些对象可以回收，然后将不可回收的对象全部移动到之前保留的内存空间中，最后将原来用于分配的内存空间全部清除。我们无法保证每次回收时都只要少量对象存活，当出现极端情况时，会出现内存不足的情况，这时我们就会通过担保机制，直接从老年代中分配内存创建对象实例，</p>
+</li>
+<li><p>标记-整理算法：该算法先标记出所以可回收对象，然后将存活对象都移动到一端，最后清除边界外的内存空间。这种方法相比复制算法更适用于对象存活率较高的情况，可以减少对象复制的操作，而且不需要浪费内存空间</p>
+</li>
+<li><p>分代收集算法：该算法根据对象存活周期将内存划分为几个区域，新生代、老年代，然后根据不同的区域采用不同的收集算法。比如新生代的对象经常不可用，则使用复制算法。老年代对象存活率高则使用整理算法或清除算法</p>
+</li>
+</ol>
+<h6 id="垃圾收集器"><a href="#垃圾收集器" class="headerlink" title="垃圾收集器"></a>垃圾收集器</h6><ol>
+<li><p>Serial收集器：这是最基本也是最早的收集器，它是一个单线程的收集器，与其他单线程的收集器相比，它非常简单且高效，但它高效的背后付出的代价则是当收集器回收垃圾时，必须暂停其他所有工作线程，这是令用户难以忍受的一点，随着jdk的版本升级收集器暂停的时间也越来越短，但仍然无法完全消除暂停。当然它也有它的应用场景，对于桌面应用而言，通常分配给虚拟机的内存不会很大，收集几十兆甚至一两百兆内存，时间完全可以控制在几十到100毫秒左右。</p>
+</li>
+<li><p>ParNew收集器：这是Serial收集器的多线程版本，除了具备多线程的特性外，它完全和Serial收集器一样。</p>
+</li>
+<li><p>CMS收集器：这是一款以获得最短停顿时间为目标的收集器，它基于标记-清除算法，收集过程中分为四个阶段，1).初始标记、2).并发标记、3).重新标记、4).并发清除。其中初始标记和重新标记两个阶段需要暂停其他工作线程，但时间非常短暂。由于回收过程中最耗时的并发标记和并发清除阶段不需要暂停其他工作线程，因此总体上可以视为收集线程与用户线程是并发执行的。它也存在一些缺点，1).CPU资源敏感，当CPU资源不足时会挤占用户线程的资源，导致运行速度大幅降低、2).由于是采用标记清除算法，因此会产生许多碎片空间、3).无法处理浮动垃圾，即回收时用户线程仍然在产生新的垃圾，因此需要预留空间给用户线程使用，当预留空间不足时会导致回收失败，直接触发FullGC，JVM会SerialOld收集器进行老年代回收，而这是会使用户线程停顿很长的时间</p>
+</li>
+<li><p>G1收集器：该收集器是一款基于标记-整理算法的收集器，它允许用户精确指定在M时间内停顿时间不得超过N毫秒，G1收集器通过将JAVA堆划分为多个大小固定的内存区域，并跟踪区域内存可用大小，建立一个维护优先列表，每次在允许的时间内回收垃圾最多的区域，这种模式使得G1收集器可以在不降低吞吐量的前提下完成低停顿的内存回收</p>
+</li>
+</ol>
+<h6 id="内存区域管理"><a href="#内存区域管理" class="headerlink" title="内存区域管理"></a>内存区域管理</h6><p>JVM为了更好的回收管理堆内存，将JAVA堆内存划分为新生代、老年代、永久代。</p>
+<ol>
+<li><p>新生代：新生代又被划分为Eden和Survivor区域，大部分新生对象都是在新生代中的Eden进行分配内存的，当这些对象在GC回收中存活下后，就会被转移到Survivor区域，同时计数器+1，每存活一次GC回收计数器都会+1，当达到一定次数后，这些对象就会被移动到老年代。该区域采用标记-复制算法进行回收垃圾。</p>
+</li>
+<li><p>老年代： 进入老年代的对象除了新生代中长时间存活的对象外还有一些新创建的大对象，例如用于读取文件内容的字节数组等</p>
+</li>
+<li><p>永久代：用于存放Class等一些元数据信息，这些数据几乎不可能出现需要回收的情况，因此被称为永久代，在JAVA8中该区域已被元数据区所取代。</p>
+</li>
+</ol>
+<h6 id="JDK命令行工具"><a href="#JDK命令行工具" class="headerlink" title="JDK命令行工具"></a>JDK命令行工具</h6><ol>
+<li><p>jps：用于查看当前虚拟机进程，列出JAVA执行进程的入口类、JVMID等信息</p>
+</li>
+<li><p>jstat：用于监视虚拟机运行状态，查看类装载、内存、垃圾回收等运行数据</p>
+</li>
+<li><p>jinfo：用于实时查看及调整虚拟机运行参数</p>
+</li>
+<li><p>jmap：用于生成堆转储快照</p>
+</li>
+<li><p>jhat：用于分析堆转储快照</p>
+</li>
+<li><p>jstack：用于生成虚拟机当前线程快照，定位线程阻塞的原因</p>
+</li>
+<li><p>jconsole：基于JMX的虚拟机可视化监控管理工具，可以监控虚拟机内存、线程、MBean等信息</p>
+</li>
+</ol>
+<h5 id="二、虚拟机执行子系统"><a href="#二、虚拟机执行子系统" class="headerlink" title="二、虚拟机执行子系统"></a>二、虚拟机执行子系统</h5><p><strong>想想很多程序开发者都听说过JAVA的口号吧“一次编译到处运行“,JAVA之所以敢提出这个口号，是因为JAVA代码并不是直接运行在操作系统上的，而是编译为class文件，运行于虚拟机环境中。也因此JAVA设计者们提出了JAVA虚拟机规范，使得JAVA代码可以运行在任何实现了JAVA虚拟机规范的不同平台不同厂商的虚拟机上从而实现了平台无关性，另外由于虚拟机并不是直接运行JAVA代码而是运行Class文件，使得其它语言也有了运行在JAVA虚拟机上的可能性，使得JAVA虚拟机也拥有了语言无关性</strong></p>
+<h6 id="类文件结构"><a href="#类文件结构" class="headerlink" title="类文件结构"></a>类文件结构</h6><p>class文件是一组以8位字节为基础单位的二进制流，当需要存储超过八位字节的数据时则按照高位在前分割为若干个8位字节存储，中间没有任何分隔符。虚拟机规范规定了class文件采用累计C语言结构体的方式存储，这种结构体只要两种结构，1).无符号数、2).表。无符号数属于基本数据类型，用u1、u2、u4、u8代表1、2、4、8个字节，用于描述数字、索引引用、数量值、或按照UTF8编位字符串值。表由多个无符号数或其他表组成的数据类型。<br>由于class文件没有分隔符，因此它的结构顺序及大小是被严格限定的，下面的表就是class文件的结构顺序</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>名称</th>
+<th>数量</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>u4</td>
+<td>magic</td>
+<td>1</td>
+<td>文件标识符</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>minor_version</td>
+<td>1</td>
+<td>java次版本</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>major_version</td>
+<td>1</td>
+<td>java主版本</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>constant_pool_count</td>
+<td>1</td>
+<td>常量池大小</td>
+</tr>
+<tr>
+<td>cp_info</td>
+<td>constant_pool</td>
+<td>constant_pool_count</td>
+<td>存放常量的常量池</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>access_flag</td>
+<td>1</td>
+<td>class访问标识符</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>this_class</td>
+<td>1</td>
+<td>当前类描述符</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>super_class</td>
+<td>1</td>
+<td>父类描述符</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>interfaces_count</td>
+<td>1</td>
+<td>实现的接口数量</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>interfaces</td>
+<td>interfaces_count</td>
+<td>实现的接口描述符</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>fields_count</td>
+<td>1</td>
+<td>成员变量数量</td>
+</tr>
+<tr>
+<td>field_info</td>
+<td>fields</td>
+<td>fields_count</td>
+<td>成员变量描述符</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>methods_count</td>
+<td>1</td>
+<td>成员方法数量</td>
+</tr>
+<tr>
+<td>method_info</td>
+<td>methods</td>
+<td>methods_count</td>
+<td>成员方法描述符</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>attributes_count</td>
+<td>1</td>
+<td>属性表数量</td>
+</tr>
+<tr>
+<td>attribute_info</td>
+<td>attributes</td>
+<td>attributes_count</td>
+<td>属性表</td>
+</tr>
+</tbody></table>
+<p>注意上面常量池的计数是从1开始的，原因是有些情况下需要表达不引用任何一个常量池项，因此空出0来表达不引用任何常量</p>
+<p>常量池中主要存放两种值：字面量和符号引用。字面量是指字符串及被声明为final的常量值，符号引用则指类和接口的全限定名、字段名称及描述符、方法名称及描述符。常量池中的每一项都是一个表，共有11中不同类型的表，每个表的开始都是一个u1的标识位，代表该项的数据类型，取值为1-12，2被空出</p>
+<p>在JAVA语法中规定了，同一个类不能存在两个相同方法名且参数类型及个数相同仅返回值不同的的方法，但在class文件中却没有这个限制，class结构允许存在方法名及参数个数类型相同但返回值类型不同的方法描述符</p>
+<p>JAVA虚拟机规范中在属性表中预定义了9种可识别的属性：</p>
+<table>
+<thead>
+<tr>
+<th>属性名称</th>
+<th>使用位置</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>code</td>
+<td>方法表</td>
+<td>java代码编译的字节码指令</td>
+</tr>
+<tr>
+<td>ConstantValue</td>
+<td>字段表</td>
+<td>final定义的常量值</td>
+</tr>
+<tr>
+<td>Deprecated</td>
+<td>类，方法表，字段表</td>
+<td>被声明为Deprecated方法和类</td>
+</tr>
+<tr>
+<td>Exception</td>
+<td>方法表</td>
+<td>方法声明抛出的异常</td>
+</tr>
+<tr>
+<td>InnerClass</td>
+<td>类</td>
+<td>内部类列表</td>
+</tr>
+<tr>
+<td>LineNumberTable</td>
+<td>Code属性</td>
+<td>java源码和字节码的对应关系</td>
+</tr>
+<tr>
+<td>LocalVariableTable</td>
+<td>Code属性</td>
+<td>局部变量描述</td>
+</tr>
+<tr>
+<td>SourceFile</td>
+<td>类文件</td>
+<td>源文件名称</td>
+</tr>
+<tr>
+<td>Synthetic</td>
+<td>类，方法表，字段表</td>
+<td>标识方法或字段是编译器自动生成的</td>
+</tr>
+</tbody></table>
+<h6 id="虚拟机类加载机制"><a href="#虚拟机类加载机制" class="headerlink" title="虚拟机类加载机制"></a>虚拟机类加载机制</h6><p><strong>类加载过程</strong>：</p>
+<p><img src="/" class="lazyload" data-src="/2021/10/20/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3JAVA%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7%E4%B8%8E%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5--%E7%AC%94%E8%AE%B0/classLoaderProcess.png"  alt></p>
+<p>按照上图所示类的声明周期有七个阶段，其中加载、验证、准备、初始化、卸载五个阶段的开始顺序是确定，而解析阶段则有可能在初始化之后才开始。</p>
+<p>对于加载阶段，虚拟机并没有规定应该声明时候开始触发，但对于初始化阶段，虚拟机有明确规定有以下四种情况，必须进行初始化：</p>
+<ol>
+<li><p>使用new、getstatic、putstatic或invokestatic命令时，如果类没有初始化则必须立刻进行初始化，具体场景为使用new创建对象、读取或设置静态变量(被final修饰的除外，已在编译器将将结果放入常量池的除外)、调用静态方法</p>
+</li>
+<li><p>使用反射时，类未初始化则必须立刻初始化</p>
+</li>
+<li><p>当初始化类时，如果它的父类未初始化则先初始化</p>
+</li>
+<li><p>虚拟机启动时，用户需要指定启动主类即包含main方法的类，虚拟机会先初始化该类</p>
+</li>
+</ol>
+<p>对于以上四种场景虚拟机规范称之为主动引用，除此之外的引用类方式都称为被动引用，都不会触发初始化行为，例如通过子类去调用父类的静态成员，则只会触发父类的初始化</p>
+<p><strong>具体类加载过程</strong></p>
+<ol>
+<li><p>加载阶段：首先根据类全限定名获取二进制流，然后将静态存储结果转换为方法区存储结构，最后生成Class对象作为方法区数据的访问入口，由于虚拟机并没有规定必须从class文件种获取二进制流，因此我们可以自行实现加载器，从zip包，网络或其他渠道获取二进制流。</p>
+</li>
+<li><p>验证阶段：虚拟机规范对该过程的描述十分笼统，仅说明当文件不符合格式时抛出错误，并未具体说明如何检查。因此不同的虚拟机对该过程有不同的实现，但大致可分为：文件格式检查，例如检查魔数，主次版本号等是否符合要求、元数据检查，例如检查类是否有父类，是否继承了不允许继承的类、字节码验证，例如类型转换是否正确、符号引用验证，例如检查通过描述的类全限定名是否能找到对应的类</p>
+</li>
+<li><p>准备阶段：该阶段是对类静态变量分配默认值，但它分配的是通常情况下该类型应有的初始值，例如代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> i = <span class="number">123</span></span><br></pre></td></tr></table></figure>
+<p>以上代码在准备阶段时分配的初始值是0，而不是123，除非该字段被final关键字修饰。</p>
+</li>
+<li><p>解析阶段：虚拟机在该阶段将符号引用替换为直接引用</p>
+</li>
+<li><p>初始化阶段：该阶段是虚拟机加载类的最后一步，虚拟在这个阶段根据用户程序代码为变量进行初始化赋值和执行一些静态代码 ，虚拟机在这里主要是在执行<clinit>方法，该方法是虚拟机收集静态变量赋值及静态代码块合并生成的，代码顺序由其在源码中的顺序决定，当执行子类的<clinit>方法时虚拟机不会调用父类的<clinit>方法，但会保证父类的<clitit>方法在子类之前完成调用。虚拟机能保证<clinit>方法在多线程环境下的线程安全，只会有一个线程去执行，其他线程会被阻塞，因此如果在静态代码块中进行一些耗时操作会导致多个线程被阻塞。</clinit></clitit></clinit></clinit></clinit></p>
+</li>
+</ol>
+<p><strong>类加载器</strong></p>
+<p>在虚拟机中根据类全限定名加载class的动作是在虚拟机外部完成的，通过类加载器进行加载class文件，这也意味着用户可以根据自身需求自行实现类加载器完成类加载动作。<br>类加载器除了起到加载class的作用外，它还和它所加载的class一起确定了当前class的唯一性即当你使用class对象的equal方法或instanceof关键字比较其他类加载器加载的class对象时得到的结果必然是不相等，因为它们不是由同一个类加载器加载的。</p>
+<p>类加载器可以分为三类：</p>
+<ol>
+<li><p>启动类加载器：该类是负责加载JAVA_HOME/lib目录或被启动参数-Xbootclasspath指定的目录中的jar文件，对于HotSpot来说该加载器是通过C++实现的，用户程序无法引用该加载器</p>
+</li>
+<li><p>扩展类加载器：该类负责加载JAVA_HOME/lib/ext目录或java.ext.dirs系统变量所指定的类库，用户程序可以引用该加载器</p>
+</li>
+<li><p>应用程序类加载器：该类负责加载用户classpath路径下的类库，它也是程序中的默认加载器，用户可以通过getSystemClassLoader()方法获得该类加载器，因此也称为系统加载器</p>
+</li>
+</ol>
+<p><strong>双亲加载模型</strong><br>如下图所示，JAVA采用双亲模型进行加载类，即当一个子类加载器接收到一个类加载请求时它会先检查该类是否已加载，如果没有加载则将请求委托给父加载器，如果没有父加载器则默认使用系统加载器去加载，父类加载器又会委托给它的父类加载器，以此类推，直到启动类加载器，当所有的父类加载器加载不了时（该类不在父加载器的加载目录下），子加载器才会尝试自己进行加载。这样做的好处在于保证了同一个类文件在虚拟机内都是同一个class对象<br><img src="/" class="lazyload" data-src="/2021/10/20/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3JAVA%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7%E4%B8%8E%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5--%E7%AC%94%E8%AE%B0/%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B.png"  alt></p>
+<p>双亲模型虽然有保证类不被重复加载的好处，但设计者也并没有强制开发者遵循该模式。事实上双亲模型也会被破坏，这样的行为有三次：</p>
+<ol>
+<li>第一次是在双亲模型出现之前即jdk1.2之前，当时开发者继承classLodaer类之后，都会重写loadClass方法，而双亲模型的实现恰恰实在这个方法中完成的，因此设计者为了兼容开发者以前的自定义类加载器代码不得不做出妥协，在classLoader中添加了新的findClass方法，推荐jdk1.2之后的开发都去重写findClass方法而不是loadClasss方法，这样新的类加载器就符合双亲模型了。</li>
+<li>第二次破坏是由于双亲模型本身的缺陷引起的，双亲模型能很好的解决基础类在虚拟机内的唯一，但是当基础类需要调用用户代码时就会没办法了，例如JNDI服务，它是由启动类加载器加载的，由于需要集中管理资源，它需要调用服务厂商部署在classpath下的服务提供者，但启动类加载器的加载范围不包含classpath，因此也无法认识这些代码。为解决这个问题设计者只能设计一个线程上下文类加载器，该加载器通过Thread类的setContextClassLoader进行设置，如果创建线程时还未设置则从父线程获取，如果父线程也没有，则默认获取应用程序类加载器，这样启动类加载器就可以委托线程上下文类加载器去获取服务提供者的代码了，但这恰恰违背了双亲模型。</li>
+<li>第三次破坏是由于开发者对程序热部署概念的追求导致的，客户总是希望系统能够降低风险，而如果能实现系统不停机更新，无疑对客户有着巨大的吸引力。因此OSGI应运而生，这是一项Java动态化模块化系统规范，它通过自定义类加载器的机制实现了模块热部署，当需要更新模块时就把bundle和对应的类加载器全部丢弃重建，以此实现代码热替换。在OSGI中的类加载模型不再遵从双亲模式，而是以下形式：</li>
+<li>）凡是java包下的类都交给父类加载器进行加载</li>
+<li>）否则将委派名单上的类交给父类加载器加载</li>
+<li>）否则将Import列表的类交给Export这个类的bundle的类加载器加载</li>
+<li>）否则查找类是否在自己FragmentBundle中，如果在则委派给FragmentBundle的类加载器加载</li>
+<li>）否则查找DynamicImport的Bundle,委派给对应的BUndle的类加载器加载</li>
+<li>）否则类查找失败<br>上面的顺序只有1，2是符合双亲委派机制，其余的类查找都是在平级进行的。虽然OSGI破坏了双亲委派模型，但这并不不行的，这种改变无疑带了很大的便利，是一种创新改动。</li>
+</ol>
+<h6 id="虚拟机字节码执行引擎"><a href="#虚拟机字节码执行引擎" class="headerlink" title="虚拟机字节码执行引擎"></a>虚拟机字节码执行引擎</h6><p>虚拟机是相对于于物理机的概念，这两者都具备代码执行能力，不同的是物理机的执行引擎是建立再于本身的处理器、操作系统、硬件、指令集上的，<br>而虚拟机的执行引擎是自己实现的，可以自己定义一些指令集，并且能支持一些不被硬件直接支持的指令集格式。<br>JAVA虚拟机规范制定了虚拟机执行引擎的概念模型，而不同的虚拟机有不同的实现，有的是编译执行，有的是解释执行，还有的是编译和解释执行混用。<br>所谓编译执行就是将字节码一次性编译成本地代码后直接执行本地代码，而解释执行则是解释器解释一句虚拟机执行一句。</p>
+<p><strong>运行时栈帧</strong></p>
+<p>栈帧是用于支持虚拟机进行方法调用的数据结构，虚拟机每调用一个方法就会生成一个方法栈，该方法栈中会包含局部变量表，操作数栈，方法出口等信息，<br>在一个线程中可能会嵌套调用多个方法，但有效的只有当前在栈顶的方法，所以被称为当前栈帧，执行引擎的所有操作也只针对当前栈帧。</p>
+<ol>
+<li><p>局部变量表：该表用于存储方法执行过程中需要的变量，该表以slot的方式存储，虚拟机并没有明确制定slot的长度，但规定了一个slot应当可以存储<br>一个32位的数据类型，64位则采用高位在前的方式以两个slot存储，例如long,double。该表的最大深度在编译期间就已确定，作为max_locals存储在code属<br>性中。局部变量表中的slot是可以复用的，当执行代码超出某个作用域时，这个slot就可以交给其他变量使用，这样既可以节省栈空间又可以及时让GC回收内<br>存。</p>
+</li>
+<li><p>操作数栈：这是一个后入先出的栈结构，主要用于存放JVM执行字节码命令时需要的参数，和局部变量表一样，它也有最大深度max_stacks，同样写在code<br>属性中。栈中的元素可以是任意java数据类型，32位数据类型使用一个slot，64位使用两个slot。</p>
+</li>
+<li><p>动态连接：class文件的常量池中存在大量的符号引用，字节码的方法调用指令就是以这些符号引用为参数，这些符号引用一部分在类加载时转换为直接<br>引用，另一部分在运行时转换为直接引用，这部分就称之为动态连接。</p>
+</li>
+<li><p>方法返回地址：一个方法返回的方式有两种，一、虚拟机遇到任意一个返回类型的返回指令，这种方式称为正常完成出口。二、执行过程出现异常，且异常<br>无法在栈帧的异常表中找到，这种方式称为异常完成出口，这种返回不会给予方法调用者任何返回信息。无论是那种方式退出，JVM都需要将当前栈帧出栈，<br>恢复方法调用者的栈帧，有返回值则将返回值压栈，并将PC计数器指向方法调用者的下一条指令。如果方法是正常返回则会采用PC计数器的值作为返回地址，否则会通过异常处理器表确定</p>
+</li>
+</ol>
+<p><strong>方法调用</strong></p>
+<p>在虚拟机中方法调用不代表方法执行，方法调用仅仅是为了确定需要调用的方法。要完成一个方法的执行，需要经过解析或分派。</p>
+<ol>
+<li><p>解析：在类加载时会又一部分部分符号引用被转化为直接引用，这种解析的前提是目标方法在编译时就确定了，在java中符合要求的只有静态方法和被<br>final修饰的方法，这两种方法都不可能出现继承和重写的情况，因此可以在加载时就转为直接引用。这种方法的调用就称为解析</p>
+</li>
+<li><p>分派：分派又有静态分派和动态分派的区别，静态分派在被调用方法所属对象确定的时候，依赖参数静态类型确定具体分派给哪个方法版本，在某些情况下<br>静态分派也无法确定具体的方法版本，例如参数是一个字面量’a’,此时类中存在多个方法名相同参数不同的方法，编译器首先会寻找char类型的方法，如果找<br>不到则会尝试依次转为int,long,float等数据类型，继续寻找对应的方法版本。而动态分派则依赖被调用方法所属对象的实际类型，当虚拟机调用一个静态类型为父类实际类型为子类时，它会进行以下操作<br>1.）从操作数栈顶确定被调用方法所属对象的实际类型，记为C<br>2.）在该类及其父类，自下而上的查找方法描述符匹配的方法，如果找到则返回引用<br>3.）如果始终未找到合适的方法，则抛出java.lang.AbstractMethodError异常</p>
+<p><strong>基于栈的字节码解释执行引擎</strong></p>
+<p>java执行引擎输出的指令集是一种基于栈的指令集，与之相对的还有一种基于寄存器的指令集，通常来说基于寄存器的指令集会比基于栈的指令集要更快一<br>点，因为它免去很多的出栈入栈的内存访问操作，同时也完成相同的功能也比基于栈的指令集要少很多的指令。但是而直接依赖基于寄存器的指令集的程序也<br>会不可避免的受限于硬件条件。而依赖基于栈的指令集的程序，则可以由虚拟机进行优化获取更好的性能。</p>
+</li>
+</ol>
+<h6 id="程序编译及优化"><a href="#程序编译及优化" class="headerlink" title="程序编译及优化"></a>程序编译及优化</h6><p> <strong>编译器</strong></p>
+<p> java语言的编译期可以分为三类，一、前端编译器将java源码编译为字节码文件。二、后期运行时编译器（JIT编译器）将字节码转为本地机器码。<br> 三、静态提前编译期（AOT编译器）直接将java源码编译为本地机器码。而我们通常说的编译期都是指第一类，以下是三类代表性的编译器</p>
+<ol>
+<li>前端编译器：sun的javac、EclipseJDT的增量式编译器ECJ</li>
+<li>JIT编译器：hotspot虚拟机的C1、C2编译器</li>
+<li>AOT编译器：GNU Compiler for the java (GCJ)、Excelsior JET</li>
+</ol>
+<p> <strong>插入式注解处理器</strong></p>
+<p> 在JDK1.6中Java语言提供了一组插入式注解处理器的标准API，开发者可以通过这些API干扰编译期的行为，实现在编译期间修改语法树，而一旦修改代码，<br> 编译器就会重新进行解析和符号引用填充处理，直到所有插入式注解处理器运行完成。这种特性可以帮助我们完成很多原本只能编程实现的代码，我们常<br> 用的lomback就是利用插入式注解处理器完成，我们也可以自己实现一个插入式注解对类，方法，字段的命名风格进行检查。</p>
+<p> <strong>泛型与类型擦除</strong></p>
+<p> 泛型式JDK1.5提出的新特性，它的本质式参数化类型，即类型也可以作为一个参数传递。在C#和JAVA都存在泛型，但两者的实现却完全不同，C#的泛型无论<br> 是在源码中、编译后的文件还是运行期都是切实存在，List<int>和List<String>就是不同的类型，它们有自己的虚方法表和类型数据，这种实现方式称为<br> 类型膨胀，也称为真泛型。而JAVA的泛型只存在于源码中，它实际上是JAVA的语法糖，当它被编译时就会被替换上强制类型转换，因此对于运行期的虚拟机<br> 来说List<int>和List<String>就是同一个类型，这种方式被称为类型擦除，也称为伪泛型。<br>  JAVA的使用类型擦除实现泛型的方式，也带来了一些方法重载的识别问题，例如当有两个返回值类型一致且方法名相同参数个数相同，仅参数泛型类型不同<br> 的方法是否可以编译，由于JAVA对泛型的实现本质上是进行类型擦除，所有例子中的两个方法是无法编译成功的因为它们的方法签名完全相同。<br> 但如果我们将它们的方法返回值改为int和String呢？这时我们会发现程序竟然可以编译并执行成功。这是为什么呢,因为虽然JAVA重载不会区分返回值类型，<br> 但是class文件是允许两个方法签名相同但返回值类型不同的方法同时存在的，调用时由于存在方法的泛型类型不同可以可以通过类型推断出需要调用的方<br> 法版本，因此这个例子的代码才能编译运行。<br> 虽然编译时JAVA会擦除泛型，但实际仅仅只是擦除了code属性字节码中的泛型信息，我们还是可以通过反射在元数据中获取到泛型类型。</String></int></String></int></p>
+<p> <strong>运行期优化</strong></p>
+<p> 在一些商用虚拟机中，字节码运行最初依靠解释执行，随着运行时间的推移，会检测出某些代码为热点代码，通过即时编译器将这些代码编译为本地机器码，<br> 并进行各种优化，以达到更好的运行效果。虚拟机并没有对即时编译器的规范，但依靠即时编译器的好坏却是虚拟机的优秀与否的最关键的指标之一。</p>
+<p> <strong>编译器与解释器</strong></p>
+<p> 大部分虚拟机都是采用解释器与编译器混合执行的模式，当程序启动时采用解释器执行可以更快的启动，减少编译时间，随着运行时间增长编译器开时将热点<br> 代码编译为本地机器码获取更好的性能。但内存空间受限时采用解释器执行减少占用空间，反之采用编译器执行提升效率。编译器编译优化代码时可能会采用<br> 一些激进的优化方法导致程序出现问题，此时可以通过逆优化方式回退到解释器执行继续运行，所以编译器和解释器通常时相辅相成的。<br> HotSpot虚拟机提供两个编译器 Client Compiler、Serve Compiler也称为C1、C2编译器，虚拟机运行默认采用一个编译器和一个解释器一起执行。具体是<br> 哪个编译器由虚拟机根据硬件及自身版本决定，开发者也可以通过启动参数自行决定。<br> 由于即时编译器优化代码需要占用程序运行时间，越好的优化时间越长，同时也需要收集更多程序运行信息。JDK采用了分层编译的策略：</p>
+<ol>
+<li>第0层：完全由解释器执行，解释器不开启性能监控功能，可触发第一层</li>
+<li>第1层：也称为C1编译，将字节码转为本地机器码，并使用简单可靠的优化，如有必要开启性能监控</li>
+<li>第2层：也称为C2编译，将字节码转为本地机器码，并采用一些编译耗时较长的优化，甚至根据监控信息采用一些激进的不可靠的优化手段<br>采用分层编译后，C1和C2编译器会同时运行。</li>
+</ol>
+<p> <strong>编译对象及触发条件</strong></p>
+<p> 能触发即时编译器编译的代码分为两类：一、 多次执行的方法。二、 多次执行的循环体 对于第一种情况即时编译器会直接将整个方法编译为本地机器码，<br> 而对于第二种情况即时编译器尽管是由循环体触发的但仍会编译整个方法，这种编译情况称为栈上替换。<br> 那么虚拟是怎么判断方法代码被多次执行的呢，目前有两种技术：</p>
+<ol>
+<li>基于采样的热点探测：虚拟机会周期性检查各个线程的栈顶，如果发现某个方法经常出现在栈顶，则这个方法就是热点方法，这种方式实现简单高<br>效，但难以确定具体热度，也容易受到线程阻塞等原因扰乱热点探测。</li>
+<li>基于计数器的热点探测：虚拟机为每个方法甚至代码块建立计数器，统计调用次数，如果超过一定次数则是热点方法，这种方法实现较为复杂，但更加<br>精确严谨。<br>HotSpot虚拟机就是采用第二种方式，它有方法调用计数器和回边调用计数器分别统计方法和循环体的调用次数。</li>
+</ol>
+<p> <strong>编译优化</strong></p>
+<p> 即时编译器的优化技术主要有：<br> <img src="/" class="lazyload" data-src="/2021/10/20/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3JAVA%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7%E4%B8%8E%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5--%E7%AC%94%E8%AE%B0/%E5%8D%B3%E6%97%B6%E7%BC%96%E8%AF%91%E5%99%A8%E4%BC%98%E5%8C%96%E6%8A%80%E6%9C%AF1.png"  alt><br> <img src="/" class="lazyload" data-src="/2021/10/20/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3JAVA%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7%E4%B8%8E%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5--%E7%AC%94%E8%AE%B0/%E5%8D%B3%E6%97%B6%E7%BC%96%E8%AF%91%E5%99%A8%E4%BC%98%E5%8C%96%E6%8A%80%E6%9C%AF2.png"  alt><br> <img src="/" class="lazyload" data-src="/2021/10/20/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3JAVA%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7%E4%B8%8E%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5--%E7%AC%94%E8%AE%B0/%E5%8D%B3%E6%97%B6%E7%BC%96%E8%AF%91%E5%99%A8%E4%BC%98%E5%8C%96%E6%8A%80%E6%9C%AF3.png"  alt><br> <img src="/" class="lazyload" data-src="/2021/10/20/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3JAVA%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7%E4%B8%8E%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5--%E7%AC%94%E8%AE%B0/%E5%8D%B3%E6%97%B6%E7%BC%96%E8%AF%91%E5%99%A8%E4%BC%98%E5%8C%96%E6%8A%80%E6%9C%AF4.png"  alt></p>
+<h6 id="JAVA内存模型与线程"><a href="#JAVA内存模型与线程" class="headerlink" title="JAVA内存模型与线程"></a>JAVA内存模型与线程</h6><p> <strong>内存模型</strong></p>
+<p> 内存模型的目的定义应用程序对变量的访问规则即如何从内存中读取设置变量，此处指变量不包含局部变量和方法参数，因为它们是线程私有的不存在线程<br> 安全问题。内存模型规定了所有的变量都应该存放在主内存中，而各个线程各自都有工作内存，工作内存保存了主内存变量的拷贝，线程对变量所有的操作都<br> 是在工作内存中进行的，各个线程也不能直接访问其他线程的工作内存，线程中的变量交换完全依靠主内存进行。</p>
+<p> <strong>内存交互</strong></p>
+<p> 关于如何将从主内存读取变量到工作内存及向主内存写入变量的操作，内存模型规定了8种操作：</p>
+<ol>
+<li><p>LOCK：将主内存中的变量锁定，设置为线程独占状态。</p>
+</li>
+<li><p>UNLOCK: 将主内存中已被锁定的变量解锁。</p>
+</li>
+<li><p>READ: 将主内存的变量读取至工作内存,以便后面的LOAD操作使用。</p>
+</li>
+<li><p>LOAD: 作用于工作内存的变量，将READ操作获取到的值放入工作内存的变量副本。</p>
+</li>
+<li><p>USE: 作用于工作内存的变量，将工作内存的值传给执行引擎，当虚拟机需要使用变量值时就会执行该操作。</p>
+</li>
+<li><p>ASSIGN：作用于工作内存的变量，将执行引擎接收的值赋给工作内存的变量副本，当虚拟机需要进行给变量赋值时就会执行该操作。</p>
+</li>
+<li><p>STORE: 作用于工作内存的变量，它将工作内存的变量值同步到主内存中，供后面的WRITE操作使用。</p>
+</li>
+<li><p>WRITE：作用于主内存的变量，它将STORE操作获取的值放入主内存变量中。</p>
+<p>内存模型规定了READ和LOAD操作及STORE和WRITE操作必须顺序执行，但不要求连续执行。同时内存模型还有8个原则：</p>
+</li>
+<li><p>不允许READ、WRITE、STORE、LOAD操作单独出现，即不能工作内存读主内存但不接收值或工作内存写了值但主内存不接收。</p>
+</li>
+<li><p>不允许线程丢弃它最近的ASSIGN操作，即不能变量在工作内存值改变了但不同步到主内存。</p>
+</li>
+<li><p>不允许线程在变量没有发送改变的情况下同步数据到主内存。</p>
+</li>
+<li><p>一个新的变量只能在主内存中诞生，即对一个变量操作前必须先执行过ASSIGN和LOAD操作。</p>
+</li>
+<li><p>一个变量同一时刻只能被一个线程LOCK，但同一个线程可以进行多次LOCK，之后需要相同次数的UNLOCK解锁</p>
+</li>
+<li><p>如果对一个变量进行LOCK,则会清空工作内存该变量的副本，之后使用前需要进行ASSIGN或LOAD操作重新初始化变量值</p>
+</li>
+<li><p>对一个变量进行UNLOCK操作的前提时改变量已被LOCK</p>
+</li>
+<li><p>对一个变量进行UNLOCK前必须先将工作内存的变量副本同步到主内存</p>
+</li>
+</ol>
+<p> <strong>volatile关键字</strong></p>
+<p> 被volatile关键字修饰过的变量可以保证更改对所有的线程都是立即可见的，因为执行引擎使用都会先刷新主内存的值到工作内存中。但是它并发是线程安全<br> 的，例如a++操作，该操作编译为字节码后会被分解为两个操作，第一个操作获取主内存的变量a的值，然后压入操作数栈，最后进行+1，这个操作在多线程环<br> 境下执行到+1操作时就可能出现问题，因为你无法保证此时栈顶的值是不是还等于主内存变量a的值，其他线程可能在这时已进行完了+1操作，操作数栈的值<br> 已过期了。因此在不符合以下场景时我们仍需进行加锁保证线程安全：</p>
+<ol>
+<li>运算不依赖自身的值或只有单个线程进行更新</li>
+<li>运算不依赖其他状态变量<br>当场景为通过true或false等常量值进行控制多线程状态时，则可以很好的发挥volatile关键字的作用。<br>volatile关键字还有第二个作用即禁止指令重排序，编译器为了优化程序提高性能，可能会对重写排列指令顺序，而这可能会对我们的代码逻辑造成影响。</li>
+</ol>
+<p> <strong>long和double的非原子性协定</strong></p>
+<p> 虚拟机规范要求lock，unlock等8种内存模型操作必须具备原子性，但允许对64位的数据类型不实现原子性，不过基本上主流虚拟机都选择了实现64位数据类<br> 型的原子性。</p>
+<p> <strong>并发的三个特性</strong></p>
+<ol>
+<li>原子性：内存模型的8种内存访问交互操作都是原子性的，如果需要更大范围的原子性可以通过synchronized关键字完成。</li>
+<li>可见性：内存模型提供了volatile关键字保证了可见性，同时使用synchronized关键字也能保证可见性</li>
+<li>有序性：JAVA天然就具备有序性，它的有序性可总结为一句话：”从本线程观察，一切操作都是有序的，从其他线程观察本线程，一切操作都是无序的”，<br>这句话前半句是指线程内表现为串行，后半句是指指令重排序和工作内存与主内存同步延迟现象。JAVA提供了synchronized关键字可以保证有序性，而<br>volatile关键字可以禁止指令重排序也能保证有序性。所谓线程内表现为串行是指：普通变量仅仅保证在执行过程种所有依赖该变量的地方都能正确获取到<br>值，但并不保证执行顺序与代码顺序一致，这一点是无法在线程内感知到的</li>
+</ol>
+<p> <strong>先行发生原则</strong></p>
+<p> 在编码过程中我们并不总需要通过加锁的方式保证线程安全，如果代码符合先行发生原则即操作A发生在操作B之前，操作A的结果可以被操作B观察到<br> ，则不会存在线程安全问题。以下是一些JAVA内存模型下天然存在的先行发生关系：</p>
+<ol>
+<li>程序次序关系：在一个线程内，按照代码控制流的顺序，写在前面的代码必然发生在写在后面的代码的前面。</li>
+<li>管理锁定关系：一个UNLOCK操作必然发生在后面对同一个锁的LOCK操作之前，这里的后面是指时间上的先后。</li>
+<li>volatile变量规则：对一个volatile变量的写操作发生在后面对这个变量读操作的前面，这里的后面是指时间上的先后。</li>
+<li>线程启动规则：线程的start方法发生于该线程的所有操作之前。</li>
+<li>线程终止规则：线程的所有操作发生于对此线程的检测之前。</li>
+<li>线程中断规则：对线程的interrupt方法的调用先行发生于被中断线程代码检测到中断事件的发生。</li>
+<li>对象终结规则：一个对象的初始化完成先行发生于该对象的finalize方法之前。</li>
+<li>传递性：如果操作A发生于操作B之前，操作B发生于操作C之前，则操作A必然发生于操作C之前。</li>
+</ol>
+<p> <strong>线程的实现</strong></p>
+<p> 线程是比进程更小的执行单元，线程相比进程的优势在于多线程之间可以共享IO、CPU、内存等资源，又可以独立调用。线程的实现通常需要操作系统的支持，目前操作系统基本都支持线程，而线程的具体实现有三种方式：</p>
+<ol>
+<li><p>内核线程：内核进程是直接有系统内核支持的一种线程，这种线程由内核完成线程切换，内核通过调度器将线程分配到不同的处理器运行，这种支持多线<br>程的内核被称为多线程内核，但程序通常不会直接使用内核线程而是用它提供的一种轻量级进程，这也是我们通常多说的线程，每一个轻量级进程都需要一<br>个内核进程支持，由于内核线程的支持每个轻量级进程都是对立的执行单元，即时阻塞了也不影响内核线程，但也由于是基于内核线程实现，因此创建，<br>析构都会需要在用户态和内核态进行切换，代价较大，同时轻量级进程也会消耗内核资源，因此系统支持的轻量级进程是有限的。</p>
+</li>
+<li><p>用户线程：通常意义的用户线程是指完全建立在用户态的线程，它的创建，析构，同步都不依赖内核态，因此操作会更快速且低耗，但是没有内核态的支<br>持，也意味着所有操作都需要用户程序来实现，线程的创建，调度，切换都是需要考虑的问题，而由于操作系统只将资源分配到进程，线程如何解决堵塞，如<br>何映射到其他处理器等问题都很难解决。因此目前java、ruby等语言都放弃了用户线程。</p>
+</li>
+<li><p>混合实现：除了内核线程和用户线程各自独立实现外，还可以将两者结合，用户线程支持大量的并发，而内核线程作为用户线程和内核态的桥梁映射处理<br>器，分配资源等，用户线程和内核线程的比例关系不等，是M:N的线程模型关系。</p>
+</li>
+</ol>
+<p> <strong>线程调度</strong></p>
+<p> 线程调度可分为协同式和抢占式，协同式调度：线程的执行时间由线程自行决定，当它执行完后通知系统让出执行时间，但是如果线程堵塞的话可能造成整个<br> 系统都直接崩溃了。抢占式：线程的执行时间由系统决定，但是线程可以让出自己的执行时间，如果我们想让系统给某个系统多分配一些执行时间，可以设置<br> 优先级，但是并不一定就会拿到更多的执行时间。</p>
+<p> <strong>线程状态</strong></p>
+<ol>
+<li>新建：创建但尚未启动的线程状态</li>
+<li>运行：已启动的线程，可能正在运行，也可能在等待分配执行时间</li>
+<li>等待：该状态可分为无限期等待和限期等待，无限期等待指线程挂起直到被其他线程唤醒，限期等待指线程挂起一段时间后就会被系统唤醒</li>
+<li>阻塞：线程在等待获取排他锁的状态</li>
+<li>死亡：线程完成执行任务，开始销毁资源</li>
+</ol>
+</div><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">knight</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://hkj141421.github.io/2021/10/20/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3JAVA%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7%E4%B8%8E%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5--%E7%AC%94%E8%AE%B0/">https://hkj141421.github.io/2021/10/20/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3JAVA%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7%E4%B8%8E%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5--%E7%AC%94%E8%AE%B0/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://hkj141421.github.io" target="_blank">生活随笔</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/JVM/">JVM</a></div><div class="post_share"><div class="social-share" data-image="/img/post01.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css"/><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js"></script></div></div><nav class="pagination_post" id="pagination"><div class="next-post pull-full"><a href="/2021/08/12/springboot1-x%E9%83%A8%E7%BD%B2weblogic10%E7%9A%84%E8%BF%87%E7%A8%8B/"><img class="next_cover lazyload" data-src="/img/post01.jpg" onerror="onerror=null;src='/img/404.jpg'"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">springboot1.x部署weblogic10的过程</div></div></a></div></nav></article></main><footer id="footer" data-type="color"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2021 By knight</div><div class="framework-info"><span>驱动 </span><a href="https://hexo.io" target="_blank" rel="noopener"><span>Hexo</span></a><span class="footer-separator">|</span><span>主题 </span><a href="https://github.com/jerryc127/hexo-theme-butterfly" target="_blank" rel="noopener"><span>Butterfly</span></a></div></div></footer></div><section class="rightside" id="rightside"><div id="rightside-config-hide"><i class="fa fa-book" id="readmode" title="阅读模式"></i><i class="fa fa-plus" id="font_plus" title="放大字体"></i><i class="fa fa-minus" id="font_minus" title="缩小字体"></i><a class="translate_chn_to_cht" id="translateLink" href="javascript:translatePage();" title="简繁转换" target="_self">简</a><i class="darkmode fa fa-moon-o" id="darkmode" title="夜间模式"></i></div><div id="rightside-config-show"><div id="rightside_config" title="设置"><i class="fa fa-cog" aria-hidden="true"></i></div><i class="fa fa-list-ul close" id="mobile-toc-button" title="目录" aria-hidden="true"></i><i class="fa fa-arrow-up" id="go-up" title="回到顶部" aria-hidden="true"></i></div></section><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="/js/third-party/activate-power-mode.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+document.body.addEventListener('input', POWERMODE);
+</script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page@latest/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/lazysizes@latest/lazysizes.min.js" async=""></script><script src="/js/third-party/click_heart.js"></script></body></html>
